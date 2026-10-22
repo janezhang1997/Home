@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chronolog — Every day deserves to be remembered</title>
+<meta name="description" content="Chronolog is a calendar-based habit tracker and visual journal for iPhone and iPad. Tap to check in, add a photo or a note, and watch your days add up.">
+<link rel="icon" type="image/png" href="i/icon.png">
+<script>
+  (function () {
+    var root = document.documentElement;
+    root.classList.add('js');
+    if (new URLSearchParams(window.location.search).get('lang') === 'zh') {
+      root.classList.add('lang-zh');
+    }
+  })();
+</script>
+<style>
+  :root {
+    --bg: #faf7f4;
+    --glow-1: rgba(239, 68, 68, .11);
+    --glow-2: rgba(245, 158, 11, .12);
+    --card: #ffffff;
+    --card-border: rgba(24, 16, 18, .07);
+    --text: #1d181a;
+    --text-muted: #6f666a;
+    --soft: #f6efeb;
+    --brand: #e8564f;
+    --brand-ink: #b92f2a;
+    --shadow: 0 12px 32px -14px rgba(60, 30, 30, .18), 0 2px 8px -2px rgba(60, 30, 30, .06);
+    --shadow-hover: 0 26px 50px -18px rgba(60, 30, 30, .26), 0 8px 18px -8px rgba(60, 30, 30, .10);
+    --store-bg: #1b1618;
+    --store-fg: #ffffff;
+    --footer-text: #8c8387;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #100d0f;
+      --glow-1: rgba(239, 68, 68, .16);
+      --glow-2: rgba(245, 158, 11, .10);
+      --card: #1a1619;
+      --card-border: rgba(255, 255, 255, .08);
+      --text: #f3eeec;
+      --text-muted: #a59da1;
+      --soft: #241e21;
+      --brand: #f0776f;
+      --brand-ink: #f5a29b;
+      --shadow: 0 12px 32px -14px rgba(0, 0, 0, .6), 0 2px 8px -2px rgba(0, 0, 0, .4);
+      --shadow-hover: 0 26px 50px -18px rgba(0, 0, 0, .7), 0 8px 18px -8px rgba(0, 0, 0, .5);
+      --store-bg: #f4efec;
+      --store-fg: #1b1618;
+      --footer-text: #857c80;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  [hidden] { display: none !important; }
+
+  body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(1100px 560px at 12% -8%, var(--glow-1), transparent 62%),
+      radial-gradient(900px 480px at 92% 2%, var(--glow-2), transparent 58%),
+      var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---------- Language ---------- */
+  .lang-zh-ui { display: none; }
+  html.lang-zh .lang-en-ui { display: none; }
+  html.lang-zh .lang-zh-ui { display: inline; }
+
+  .lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    padding: 6px 13px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--brand-ink);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: border-color .15s ease, background-color .15s ease;
+  }
+  .lang-toggle:hover { border-color: var(--brand); }
+  .lang-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .lang-toggle svg { flex: none; }
+  html:not(.js) .lang-toggle { display: none; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 0 24px 72px; }
+
+  .topbar {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-top: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: -.01em;
+  }
+  .brand img {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(30, 10, 12, .16);
+  }
+  .brand .brand-dot { color: var(--text-muted); font-weight: 500; padding: 0 2px; }
+
+  .hero-inner {
+    max-width: 780px;
+    margin: 0 auto;
+    padding-top: 64px;
+    text-align: center;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--card) 72%, transparent);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow);
+  }
+  .badge .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+  }
+
+  .hero h1 {
+    margin-top: 20px;
+    font-size: clamp(34px, 6vw, 58px);
+    font-weight: 800;
+    letter-spacing: -.035em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  .gradient {
+    background: linear-gradient(120deg, #f97362, #ef4444 55%, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero .sub {
+    max-width: 620px;
+    margin: 18px auto 0;
+    font-size: clamp(15.5px, 2.2vw, 18px);
+    color: var(--text-muted);
+    text-wrap: balance;
+  }
+
+  .hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+
+  .hero-note {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--footer-text);
+    letter-spacing: .01em;
+  }
+
+  /* ---------- Buttons ---------- */
+  .store-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-radius: 14px;
+    background: var(--store-bg);
+    color: var(--store-fg);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 22px -10px rgba(30, 10, 12, .45), 0 2px 6px -2px rgba(30, 10, 12, .2);
+    transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  }
+  @media (hover: hover) {
+    .store-btn:not(.is-coming):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 28px -12px rgba(30, 10, 12, .5);
+    }
+  }
+  .store-btn svg { width: 22px; height: 22px; fill: currentColor; flex: none; }
+  .store-btn .txt { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+  .store-btn small {
+    font-size: 10px;
+    font-weight: 500;
+    opacity: .8;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  .store-btn b { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+  .store-btn.is-coming { opacity: .82; cursor: default; pointer-events: none; }
+
+  .ghost-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--card-border);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  @media (hover: hover) {
+    .ghost-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--brand);
+      box-shadow: var(--shadow-hover);
+    }
+  }
+
+  /* ---------- Main ---------- */
+  main {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+  }
+
+  section[id] { scroll-margin-top: 24px; }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--brand-ink);
+  }
+
+  /* ---------- Showcase ---------- */
+  .showcase {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.05fr .82fr;
+    align-items: center;
+    gap: 40px;
+    padding: 48px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .showcase::after {
+    content: "";
+    position: absolute;
+    right: -12%;
+    top: -35%;
+    width: 55%;
+    height: 90%;
+    background: radial-gradient(circle, rgba(239, 68, 68, .13), transparent 68%);
+    pointer-events: none;
+  }
+  .showcase > * { position: relative; z-index: 1; }
+
+  .showcase h2 {
+    margin-top: 10px;
+    font-size: clamp(26px, 3.6vw, 38px);
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1.15;
+  }
+
+  .showcase p.desc {
+    margin-top: 14px;
+    color: var(--text-muted);
+    font-size: 16px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    margin: 22px 0 26px;
+  }
+  .chips li {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--soft);
+    border: 1px solid var(--card-border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .showcase-media {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .showcase-media::before {
+    content: "";
+    position: absolute;
+    inset: 6% 0;
+    background: radial-gradient(circle at 50% 45%, rgba(239, 68, 68, .20), rgba(245, 158, 11, .06) 55%, transparent 72%);
+    border-radius: 50%;
+    filter: blur(6px);
+  }
+
+  .phone {
+    position: relative;
+    width: 288px;
+    max-width: 100%;
+    padding: 7px;
+    border-radius: 38px;
+    background: #0c0b0d;
+    box-shadow: 0 28px 56px -22px rgba(30, 10, 12, .5), 0 10px 24px -14px rgba(30, 10, 12, .35);
+  }
+  .phone img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 31px;
+  }
+
+  /* ---------- Sections ---------- */
+  .section { margin-top: 80px; }
+
+  .section-head {
+    max-width: 660px;
+    margin: 0 auto 34px;
+    text-align: center;
+  }
+  .section-head p { margin-top: 12px; color: var(--text-muted); font-size: 16px; text-wrap: balance; }
+  .section-head p.eyebrow {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--brand-ink);
+  }
+  .section-head h2,
+  .download h2 {
+    font-size: clamp(26px, 3.6vw, 38px);
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1.15;
+  }
+
+  /* ---------- Features ---------- */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .feature {
+    position: relative;
+    padding: 28px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .feature::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--accent, linear-gradient(90deg, #f97362, #ef4444));
+    opacity: .9;
+  }
+  .feature:nth-child(1) { --accent: linear-gradient(90deg, #fb7185, #ef4444); }
+  .feature:nth-child(2) { --accent: linear-gradient(90deg, #fbbf24, #f59e0b); }
+  .feature:nth-child(3) { --accent: linear-gradient(90deg, #2dd4bf, #0ea5e9); }
+  .feature:nth-child(4) { --accent: linear-gradient(90deg, #a78bfa, #6366f1); }
+  @media (hover: hover) {
+    .feature:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+  }
+
+  .feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+    background: var(--soft);
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .feature h3 {
+    margin-top: 18px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+  .feature p {
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* ---------- Gallery ---------- */
+  .shots {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .shot {
+    flex: 0 1 280px;
+    text-align: center;
+  }
+  .shot .phone {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+    padding: 6px;
+    border-radius: 32px;
+  }
+  .shot .phone img { border-radius: 26px; }
+  .shot figcaption {
+    margin-top: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  /* ---------- Download ---------- */
+  .download {
+    margin-top: 84px;
+    padding: 56px 32px 52px;
+    text-align: center;
+    border-radius: 32px;
+    border: 1px solid var(--card-border);
+    background:
+      linear-gradient(160deg, rgba(239, 68, 68, .10), rgba(245, 158, 11, .08) 55%, transparent 80%),
+      var(--card);
+    box-shadow: var(--shadow);
+  }
+  .download-icon {
+    width: 84px;
+    height: 84px;
+    border-radius: 20px;
+    box-shadow: 0 12px 24px -10px rgba(30, 10, 12, .35);
+  }
+  .download h2 { margin-top: 22px; }
+  .download p {
+    max-width: 540px;
+    margin: 12px auto 0;
+    color: var(--text-muted);
+    font-size: 16px;
+  }
+  .download-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 24px 48px;
+    text-align: center;
+    color: var(--footer-text);
+    font-size: 13.5px;
+  }
+  footer p + p { margin-top: 8px; }
+  footer a {
+    color: var(--footer-text);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--footer-text) 35%, transparent);
+    transition: color .2s ease;
+  }
+  footer a:hover { color: var(--text); }
+  footer .fine { margin-top: 18px; font-size: 12.5px; opacity: .8; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 820px) {
+    .showcase {
+      grid-template-columns: 1fr;
+      padding: 32px 24px;
+      gap: 30px;
+    }
+    .showcase-copy { order: 1; }
+    .showcase-media { order: 2; }
+    .phone { width: 250px; }
+  }
+
+  @media (max-width: 680px) {
+    .feature-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 760px) {
+    .shots {
+      justify-content: flex-start;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 2px 14px;
+      scrollbar-width: none;
+    }
+    .shots::-webkit-scrollbar { display: none; }
+    .shot {
+      flex: 0 0 68%;
+      scroll-snap-align: center;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 0 18px 52px; }
+    .topbar { padding-top: 16px; }
+    .hero-inner { padding-top: 44px; }
+    main { padding: 0 16px 28px; }
+    .section { margin-top: 64px; }
+    .download { padding: 40px 22px; margin-top: 64px; }
+    footer { padding: 32px 18px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero" id="top">
+  <div class="topbar">
+    <a class="brand" href="#top">
+      <img src="i/icon.png" alt="" width="30" height="30">
+      <span>简时记 <span class="brand-dot">·</span> Chronolog</span>
+    </a>
+    <button id="lang-toggle" class="lang-toggle" type="button" lang="zh-CN" aria-label="Switch to Chinese">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M3 12h18"></path>
+        <path d="M12 3c2.6 2.8 2.6 15.2 0 18"></path>
+        <path d="M12 3c-2.6 2.8-2.6 15.2 0 18"></path>
+      </svg>
+      <span class="lang-en-ui" lang="zh-CN">中文</span>
+      <span class="lang-zh-ui" lang="en">English</span>
+    </button>
+  </div>
+
+  <div class="hero-inner">
+    <div class="badge">
+      <span class="dot"></span>
+      <span class="lang-en-ui">Made for iPhone &amp; iPad</span>
+      <span class="lang-zh-ui">为 iPhone 与 iPad 打造</span>
+    </div>
+
+    <h1>
+      <span class="lang-en-ui">Every day deserves<br>to be <span class="gradient">remembered.</span></span>
+      <span class="lang-zh-ui">每一天，<br>都值得被<span class="gradient">记住。</span></span>
+    </h1>
+
+    <p class="sub">
+      <span class="lang-en-ui">A calendar-based habit tracker and visual journal. Tap to check in, add a photo or a note, and watch your small wins add up.</span>
+      <span class="lang-zh-ui">日历式习惯记录与图文日记。轻点打卡，写下此刻，让生活的变化清晰可见。</span>
+    </p>
+
+    <div class="hero-actions">
+      <a class="store-btn is-coming" data-store href="#" aria-disabled="true" tabindex="-1">
+        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        <span class="txt">
+          <small>
+            <span class="lang-en-ui" data-store-small>Coming soon to the</span>
+            <span class="lang-zh-ui" data-store-small>即将登陆</span>
+          </small>
+          <b>App Store</b>
+        </span>
+      </a>
+      <a class="ghost-btn" href="#features">
+        <span class="lang-en-ui">See what’s inside</span>
+        <span class="lang-zh-ui">看看里面有什么</span>
+        <span aria-hidden="true">↓</span>
+      </a>
+    </div>
+
+    <p class="hero-note">
+      <span class="lang-en-ui">No ads · No tracking · Private by design</span>
+      <span class="lang-zh-ui">没有广告 · 没有追踪 · 隐私优先</span>
+    </p>
+  </div>
+</header>
+
+<main>
+  <section class="showcase" aria-labelledby="showcase-title">
+    <div class="showcase-copy">
+      <p class="eyebrow">简时记 · Chronolog</p>
+      <h2 id="showcase-title">
+        <span class="lang-en-ui">A calendar that remembers with you.</span>
+        <span class="lang-zh-ui">一本会记住日子的日历。</span>
+      </h2>
+      <p class="desc">
+        <span class="lang-en-ui">Chronolog turns your calendar into a gentle habit tracker. Each day holds your check-ins, notes, and photos — so a glance at the month shows how far you’ve come.</span>
+        <span class="lang-zh-ui">简时记把日历变成温柔的习惯记录本。每天的打卡、备注和照片都留在格子里，翻开一个月，就能看见自己走了多远。</span>
+      </p>
+      <ul class="chips">
+        <li><span class="lang-en-ui">Calendar check-ins</span><span class="lang-zh-ui">日历打卡</span></li>
+        <li><span class="lang-en-ui">Notes &amp; photos</span><span class="lang-zh-ui">图文记录</span></li>
+        <li><span class="lang-en-ui">Weekly &amp; monthly stats</span><span class="lang-zh-ui">周 / 月统计</span></li>
+        <li><span class="lang-en-ui">Privacy first</span><span class="lang-zh-ui">隐私优先</span></li>
+      </ul>
+      <a class="store-btn is-coming" data-store href="#" aria-disabled="true" tabindex="-1">
+        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        <span class="txt">
+          <small>
+            <span class="lang-en-ui" data-store-small>Coming soon to the</span>
+            <span class="lang-zh-ui" data-store-small>即将登陆</span>
+          </small>
+          <b>App Store</b>
+        </span>
+      </a>
+    </div>
+
+    <div class="showcase-media">
+      <div class="phone">
+        <img src="i/day.jpg" alt="Chronolog daily view with check-ins, notes and photos" width="1000" height="2174">
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features" aria-labelledby="features-title">
+    <div class="section-head">
+      <p class="eyebrow">
+        <span class="lang-en-ui">What’s inside</span>
+        <span class="lang-zh-ui">里面有什么</span>
+      </p>
+      <h2 id="features-title">
+        <span class="lang-en-ui">Small taps, a clearer life.</span>
+        <span class="lang-zh-ui">轻点几下，生活更清晰。</span>
+      </h2>
+      <p>
+        <span class="lang-en-ui">Everything you need to keep a habit — and nothing that gets in the way.</span>
+        <span class="lang-zh-ui">记录习惯需要的一切，都在这里；打扰你的东西，一样都没有。</span>
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">📅</span>
+        <h3>
+          <span class="lang-en-ui">Tap to check in</span>
+          <span class="lang-zh-ui">轻点打卡</span>
+        </h3>
+        <p>
+          <span class="lang-en-ui">One tap on any day. Water, reading, workouts, early nights — keep the habits that matter to you.</span>
+          <span class="lang-zh-ui">在任意一天轻点打卡。喝水、阅读、运动、早睡，想坚持的习惯都可以记下来。</span>
+        </p>
+      </article>
+
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">📝</span>
+        <h3>
+          <span class="lang-en-ui">Keep the little things</span>
+          <span class="lang-zh-ui">记下小事</span>
+        </h3>
+        <p>
+          <span class="lang-en-ui">Attach a note or a photo to a check-in. The most ordinary days are the ones you’ll want back.</span>
+          <span class="lang-zh-ui">给打卡加一句备注或一张照片。最普通的日常，往往最值得回看。</span>
+        </p>
+      </article>
+
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">📊</span>
+        <h3>
+          <span class="lang-en-ui">See your rhythm</span>
+          <span class="lang-zh-ui">看见节奏</span>
+        </h3>
+        <p>
+          <span class="lang-en-ui">Weekly and monthly views turn scattered check-ins into a clear picture of how your days add up.</span>
+          <span class="lang-zh-ui">周视图与月视图，把零散的打卡变成清晰的节奏。</span>
+        </p>
+      </article>
+
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">🔒</span>
+        <h3>
+          <span class="lang-en-ui">Private by design</span>
+          <span class="lang-zh-ui">隐私优先</span>
+        </h3>
+        <p>
+          <span class="lang-en-ui">No ads, no tracking, no third-party analytics. We never sell or share your data.</span>
+          <span class="lang-zh-ui">没有广告、追踪和第三方统计。我们不会出售或共享你的数据。</span>
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section gallery" id="gallery" aria-labelledby="gallery-title">
+    <div class="section-head">
+      <p class="eyebrow">
+        <span class="lang-en-ui">A look inside</span>
+        <span class="lang-zh-ui">先看一眼</span>
+      </p>
+      <h2 id="gallery-title">
+        <span class="lang-en-ui">A month at a glance.</span>
+        <span class="lang-zh-ui">一个月，一眼看完。</span>
+      </h2>
+      <p>
+        <span class="lang-en-ui">Color fills the calendar as your days fill up with life.</span>
+        <span class="lang-zh-ui">日子有了颜色，生活也就有了形状。</span>
+      </p>
+    </div>
+
+    <div class="shots">
+      <figure class="shot">
+        <div class="phone">
+          <img src="i/calendar.jpg" alt="Chronolog month calendar filled with colorful check-ins" width="1000" height="2174">
+        </div>
+        <figcaption>
+          <span class="lang-en-ui">Calendar</span>
+          <span class="lang-zh-ui">日历</span>
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="phone">
+          <img src="i/analysis.jpg" alt="Chronolog weekly analysis with a check-in grid" width="1000" height="2174">
+        </div>
+        <figcaption>
+          <span class="lang-en-ui">Insights</span>
+          <span class="lang-zh-ui">分析</span>
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="phone">
+          <img src="i/tags.jpg" alt="Chronolog tag management with categories and habits" width="1000" height="2174">
+        </div>
+        <figcaption>
+          <span class="lang-en-ui">Tags &amp; categories</span>
+          <span class="lang-zh-ui">标签与分类</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="download" id="download" aria-labelledby="download-title">
+    <img class="download-icon" src="i/icon.png" alt="简时记 (Chronolog) app icon" width="84" height="84">
+    <h2 id="download-title">
+      <span class="lang-en-ui">Start remembering your days.</span>
+      <span class="lang-zh-ui">从今天开始，记住每一天。</span>
+    </h2>
+    <p>
+      <span class="lang-en-ui">Chronolog is coming soon to the App Store. Leave your email and we’ll let you know the moment it’s live.</span>
+      <span class="lang-zh-ui">简时记即将登陆 App Store。留下邮箱，上架时第一时间告诉你。</span>
+    </p>
+    <div class="download-actions">
+      <a class="store-btn is-coming" data-store href="#" aria-disabled="true" tabindex="-1">
+        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        <span class="txt">
+          <small>
+            <span class="lang-en-ui" data-store-small>Coming soon to the</span>
+            <span class="lang-zh-ui" data-store-small>即将登陆</span>
+          </small>
+          <b>App Store</b>
+        </span>
+      </a>
+      <a class="ghost-btn" data-coming-only href="mailto:1252964419@qq.com?subject=Notify%20me%20when%20Chronolog%20launches">
+        <span class="lang-en-ui">Email me at launch</span>
+        <span class="lang-zh-ui">上架时邮件通知我</span>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>简时记 · Chronolog</p>
+  <p>
+    <a href="mailto:1252964419@qq.com">1252964419@qq.com</a>
+    <span aria-hidden="true"> · </span>
+    <a class="lang-en-ui" href="https://janezhang1997.github.io/privacy/">Privacy Policy</a>
+    <a class="lang-zh-ui" href="https://janezhang1997.github.io/privacy/?lang=zh">隐私政策</a>
+  </p>
+  <p class="fine">
+    <span class="lang-en-ui">© 2026 简时记 · Chronolog. Made for iPhone and iPad.</span>
+    <span class="lang-zh-ui">© 2026 简时记 · Chronolog。为 iPhone 与 iPad 而做。</span>
+  </p>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('lang-toggle');
+    var desc = document.querySelector('meta[name="description"]');
+    var isZh = root.classList.contains('lang-zh');
+
+    function render(zh, updateUrl) {
+      isZh = zh;
+      root.classList.toggle('lang-zh', zh);
+      root.lang = zh ? 'zh-CN' : 'en';
+      document.title = zh
+        ? '简时记 — 每一天，都值得被记住'
+        : 'Chronolog — Every day deserves to be remembered';
+      btn.lang = zh ? 'en' : 'zh-CN';
+      btn.setAttribute('aria-label', zh ? 'Switch to English' : 'Switch to Chinese');
+      if (desc) {
+        desc.setAttribute('content', zh
+          ? '简时记是一款日历式习惯记录与图文日记 App。轻点打卡、写下备注或照片，让每一天的变化清晰可见。'
+          : 'Chronolog is a calendar-based habit tracker and visual journal for iPhone and iPad. Tap to check in, add a photo or a note, and watch your days add up.');
+      }
+      if (updateUrl) {
+        var url = window.location.pathname + (zh ? '?lang=zh' : '');
+        window.history.replaceState(null, '', url);
+      }
+    }
+
+    btn.addEventListener('click', function () { render(!isZh, true); });
+    render(isZh, false);
+
+    // 上架后把 App Store 链接填在这里，例如 https://apps.apple.com/app/id1234567890
+    var APP_STORE_URL = '';
+
+    var storeLinks = document.querySelectorAll('[data-store]');
+    if (APP_STORE_URL) {
+      storeLinks.forEach(function (a) {
+        a.href = APP_STORE_URL;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.classList.remove('is-coming');
+        a.removeAttribute('aria-disabled');
+        a.removeAttribute('tabindex');
+        a.querySelectorAll('[data-store-small]').forEach(function (s) {
+          s.textContent = s.classList.contains('lang-zh-ui') ? '前往' : 'Download on the';
+        });
+      });
+      document.querySelectorAll('[data-coming-only]').forEach(function (el) {
+        el.hidden = true;
+      });
+    }
+  })();
+</script>
+</body>
+</html>
