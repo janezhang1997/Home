@@ -6,14 +6,19 @@
 <title>JianTime — Every day deserves to be remembered</title>
 <meta name="description" content="JianTime is a calendar-based habit tracker and visual journal for iPhone and iPad. Tap to check in, add a photo or a note, and watch your days add up.">
 <link rel="icon" type="image/png" href="i/icon.png">
-<link rel="preload" as="image" href="i/calendar.jpg">
 <script>
   (function () {
     var root = document.documentElement;
+    var zh = new URLSearchParams(window.location.search).get('lang') === 'zh';
     root.classList.add('js');
-    if (new URLSearchParams(window.location.search).get('lang') === 'zh') {
+    if (zh) {
       root.classList.add('lang-zh');
     }
+    var preload = document.createElement('link');
+    preload.rel = 'preload';
+    preload.as = 'image';
+    preload.href = zh ? 'i/calendar.jpg' : 'i/en/calendar.jpg';
+    document.head.appendChild(preload);
   })();
 </script>
 <style>
@@ -330,6 +335,11 @@
     border-radius: 31px;
     background: #f8efe9;
   }
+  /* English is the default page language; the Chinese screenshots only appear
+     when the language toggle adds .lang-zh. */
+  .phone img.shot-zh { display: none; }
+  html.lang-zh .phone img.shot-en { display: none; }
+  html.lang-zh .phone img.shot-zh { display: block; }
 
   /* ---------- Sections ---------- */
   .section { margin-top: 80px; }
@@ -581,7 +591,8 @@
 
     <div class="showcase-media">
       <div class="phone">
-        <img src="i/calendar.jpg" alt="JianTime month calendar filled with colorful check-ins" width="1000" height="2174">
+        <img class="shot-en" src="i/en/calendar.jpg" alt="JianTime month calendar filled with colorful check-ins" width="1000" height="2174" decoding="async">
+        <img class="shot-zh" src="i/calendar.jpg" alt="简时记月视图，彩色打卡填满日历格子" width="1000" height="2174" loading="lazy" decoding="async">
       </div>
     </div>
   </section>
@@ -664,7 +675,8 @@
     <div class="shots">
       <figure class="shot">
         <div class="phone">
-          <img src="i/day.jpg" alt="JianTime daily view with check-ins, notes and photos" width="1000" height="2174">
+          <img class="shot-en" src="i/en/day.jpg" alt="JianTime daily view with check-ins, notes and photos" width="1000" height="2174" decoding="async">
+          <img class="shot-zh" src="i/day.jpg" alt="简时记日视图，显示当天的打卡、备注和照片" width="1000" height="2174" loading="lazy" decoding="async">
         </div>
         <figcaption>
           <span class="lang-en-ui">Daily view</span>
@@ -674,7 +686,8 @@
 
       <figure class="shot">
         <div class="phone">
-          <img src="i/analysis.jpg" alt="JianTime weekly analysis with a check-in grid" width="1000" height="2174">
+          <img class="shot-en" src="i/en/analysis.jpg" alt="JianTime weekly analysis with a check-in grid" width="1000" height="2174" decoding="async">
+          <img class="shot-zh" src="i/analysis.jpg" alt="简时记分析页，一周打卡点阵与标签明细" width="1000" height="2174" loading="lazy" decoding="async">
         </div>
         <figcaption>
           <span class="lang-en-ui">Insights</span>
@@ -684,7 +697,8 @@
 
       <figure class="shot">
         <div class="phone">
-          <img src="i/tags.jpg" alt="JianTime tag management with categories and habits" width="1000" height="2174">
+          <img class="shot-en" src="i/en/tags.jpg" alt="JianTime tag management with categories and habits" width="1000" height="2174" decoding="async">
+          <img class="shot-zh" src="i/tags.jpg" alt="简时记标签管理页，按分类展示所有习惯" width="1000" height="2174" loading="lazy" decoding="async">
         </div>
         <figcaption>
           <span class="lang-en-ui">Tags &amp; categories</span>
